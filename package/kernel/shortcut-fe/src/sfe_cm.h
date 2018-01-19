@@ -175,16 +175,7 @@ void sfe_ipv4_register_sync_rule_callback(sfe_sync_rule_callback_t callback);
 void sfe_ipv4_update_rule(struct sfe_connection_create *sic);
 void sfe_ipv4_mark_rule(struct sfe_connection_mark *mark);
 
-/*
- * IPv6 APIs used by connection manager
- */
-int sfe_ipv6_recv(struct net_device *dev, struct sk_buff *skb);
-int sfe_ipv6_create_rule(struct sfe_connection_create *sic);
-void sfe_ipv6_destroy_rule(struct sfe_connection_destroy *sid);
-void sfe_ipv6_destroy_all_rules_for_dev(struct net_device *dev);
-void sfe_ipv6_register_sync_rule_callback(sfe_sync_rule_callback_t callback);
-void sfe_ipv6_update_rule(struct sfe_connection_create *sic);
-void sfe_ipv6_mark_rule(struct sfe_connection_mark *mark);
+
 
 /*
  * sfe_ipv6_addr_equal()
@@ -192,14 +183,7 @@ void sfe_ipv6_mark_rule(struct sfe_connection_mark *mark);
  *
  * return: 1, equal; 0, no equal
  */
-static inline int sfe_ipv6_addr_equal(struct sfe_ipv6_addr *a,
-				      struct sfe_ipv6_addr *b)
-{
-	return a->addr[0] == b->addr[0] &&
-	       a->addr[1] == b->addr[1] &&
-	       a->addr[2] == b->addr[2] &&
-	       a->addr[3] == b->addr[3];
-}
+
 
 /*
  * sfe_ipv4_addr_equal()
@@ -218,5 +202,5 @@ static inline int sfe_ipv6_addr_equal(struct sfe_ipv6_addr *a,
 static inline int sfe_addr_equal(sfe_ip_addr_t *a,
 				 sfe_ip_addr_t *b, int is_v4)
 {
-	return is_v4 ? sfe_ipv4_addr_equal(a->ip, b->ip) : sfe_ipv6_addr_equal(a->ip6, b->ip6);
+	return  is_v4 ? sfe_ipv4_addr_equal(a->ip, b->ip):NULL;
 }

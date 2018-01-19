@@ -26,10 +26,6 @@ wifi.default = 0
 wifi.rmempty = false
 wifi.description = translate("Enable Wireless Bridge Acceleration")
 
-ipv6 = s:option(Flag, "ipv6", translate("IPv6 Acceleration"))
-ipv6.default = 0
-ipv6.rmempty = false
-ipv6.description = translate("Enable IPv6 Acceleration")
 
 --function m.on_after_commit(self)
 

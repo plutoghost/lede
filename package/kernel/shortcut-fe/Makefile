@@ -23,11 +23,10 @@ define KernelPackage/shortcut-fe
   SECTION:=kernel
   CATEGORY:=Kernel modules
   SUBMENU:=Network Support
-  DEPENDS:=@IPV6
   TITLE:=Kernel driver for SFE
-  FILES:=$(PKG_BUILD_DIR)/shortcut-fe.ko $(PKG_BUILD_DIR)/shortcut-fe-ipv6.ko
+  FILES:=$(PKG_BUILD_DIR)/shortcut-fe.ko
   KCONFIG:=CONFIG_NF_CONNTRACK_EVENTS=y CONFIG_SHORTCUT_FE=y
-  AUTOLOAD:=$(call AutoProbe,shortcut-fe shortcut-fe-ipv6)
+  AUTOLOAD:=$(call AutoProbe,shortcut-fe)
 endef
 
 define KernelPackage/shortcut-fe/Description
