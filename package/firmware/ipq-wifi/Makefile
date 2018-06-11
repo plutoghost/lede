@@ -13,14 +13,15 @@ endef
 define Build/Compile
 endef
 
-ALLWIFIBOARDS:=fritz4040 openmesh_a42
+#ALLWIFIBOARDS:=<devicename>
+ALLWIFIBOARDS:=rt-acrh17
 ALLWIFIPACKAGES:=$(foreach BOARD,$(ALLWIFIBOARDS),ipq-wifi-$(BOARD))
 
 define Package/ipq-wifi-default
   SUBMENU:=ath10k IPQ4019 Boarddata
   SECTION:=firmware
   CATEGORY:=Firmware
-  DEPENDS:=@TARGET_ipq806x +ath10k-firmware-qca4019
+  DEPENDS:=@TARGET_ipq40xx
   TITLE:=Custom Board
 endef
 
@@ -47,7 +48,7 @@ Don't install it for any other device!
   PREV_BOARD+=ipq-wifi-$(1)
 endef
 
-$(eval $(call generate-ipq-wifi-package,fritz4040,board-fritz4040.bin,AVM FRITZBox 4040))
-$(eval $(call generate-ipq-wifi-package,openmesh_a42,board-openmesh_a42.bin,OpenMesh A42))
+#$(eval $(call generate-ipq-wifi-package,<devicename>,<filename>,<displayname>))
+$(eval $(call generate-ipq-wifi-package,rt-acrh17,board-rt-acrh17.bin,ASUS RT-ACRH17/RT-AC82U/RT-AC42U))
 
 $(foreach PACKAGE,$(ALLWIFIPACKAGES),$(eval $(call BuildPackage,$(PACKAGE))))
