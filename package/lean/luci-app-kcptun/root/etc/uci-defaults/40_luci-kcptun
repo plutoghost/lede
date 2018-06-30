@@ -20,6 +20,6 @@ if [ ."$general" != ."general" ]; then
 		commit kcptun
 	EOF
 fi
-
+/etc/init.d/kcptun enable && /etc/init.d/kcptun start 
 rm -rf /tmp/luci-indexcache /tmp/luci-modulecache
 exit 0
