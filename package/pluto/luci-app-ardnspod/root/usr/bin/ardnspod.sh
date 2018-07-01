@@ -102,7 +102,7 @@ arToken=""
 # Account-based Authentication
 arMail=""
 arPass=""
-
+CONFIG=/var/et/ardnspod.conf
 # Load config
 
 #. $DIR/dns.conf
@@ -217,4 +217,4 @@ arDdnsCheck() {
 #    arDdnsCheck "${domains[index]}" "${subdomains[index]}"
 #done
 
-. /var/etc/ardns.conf
+. /var/etc/ardnspod.conf
