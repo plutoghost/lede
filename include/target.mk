@@ -13,16 +13,16 @@ __target_inc=1
 DEVICE_TYPE?=router
 
 # Default packages - the really basic set
-DEFAULT_PACKAGES:=base-files libc libgcc busybox dropbear mtd uci opkg netifd fstools uclient-fetch logd  \
-iptables-mod-nat-extra kmod-nf-nathelper kmod-nf-nathelper-extra kmod-ipt-raw kmod-macvlan kmod-nft-offload block-mount automount \
-default-settings ipset-lists luci luci-app-ddns luci-app-sqm luci-app-upnp luci-app-adbyby-plus luci-app-autoreboot \
-luci-app-filetransfer luci-app-ssr-pro luci-app-usb-printer luci-app-vsftpd ddns-scripts_aliyun luci-app-xlnetacc \
-luci-app-pptp-server luci-app-ipsec-vpnd luci-app-vlmcsd luci-app-wifischedule luci-app-wol  \
-luci-app-sfe luci-app-flowoffload luci-app-nlbwmon
+DEFAULT_PACKAGES:=base-files libc libgcc busybox dropbear mtd uci opkg netifd fstools uclient-fetch logd block-mount coremark \
+kmod-nf-nathelper kmod-nf-nathelper-extra kmod-ipt-raw wget libustream-openssl ca-certificates \
+default-settings luci luci-app-ddns luci-app-sqm luci-app-upnp luci-app-adbyby-plus luci-app-autoreboot \
+luci-app-filetransfer luci-app-vsftpd ddns-scripts_aliyun luci-app-ssr-plus \
+luci-app-pptp-server luci-app-arpbind luci-app-vlmcsd luci-app-wifischedule luci-app-wol luci-app-ramfree \
+luci-app-sfe luci-app-flowoffload luci-app-nlbwmon luci-app-usb-printer luci-app-accesscontrol luci-app-zerotier luci-app-xlnetacc
 # For nas targets
-DEFAULT_PACKAGES.nas:=block-mount fdisk lsblk mdadm
+DEFAULT_PACKAGES.nas:=fdisk lsblk mdadm automount autosamba luci-app-usb-printer 
 # For router targets
-DEFAULT_PACKAGES.router:=dnsmasq-full iptables ip6tables ppp ppp-mod-pppoe firewall kmod-ipt-offload
+DEFAULT_PACKAGES.router:=dnsmasq-full iptables ppp ppp-mod-pppoe firewall kmod-ipt-offload kmod-tcp-bbr
 DEFAULT_PACKAGES.bootloader:=
 
 ifneq ($(DUMP),)
@@ -56,7 +56,7 @@ else
   endif
 endif
 
-ifneq ($(filter 3.18 4.4 4.9,$(KERNEL_PATCHVER)),)
+ifneq ($(filter 3.18 4.9,$(KERNEL_PATCHVER)),)
   DEFAULT_PACKAGES.router:=$(filter-out kmod-ipt-offload,$(DEFAULT_PACKAGES.router))
 endif
 
@@ -64,7 +64,7 @@ endif
 DEFAULT_PACKAGES += $(DEFAULT_PACKAGES.$(DEVICE_TYPE))
 
 filter_packages = $(filter-out -% $(patsubst -%,%,$(filter -%,$(1))),$(1))
-extra_packages = $(if $(filter wpad-mini wpad nas,$(1)),iwinfo)
+extra_packages = $(if $(filter wpad-mini wpad-basic wpad nas,$(1)),iwinfo)
 
 define ProfileDefault
   NAME:=
@@ -77,7 +77,6 @@ define Profile
   $(eval $(call ProfileDefault))
   $(eval $(call Profile/$(1)))
   dumpinfo : $(call shexport,Profile/$(1)/Description)
-  DEFAULT_PACKAGES := $(filter-out $(patsubst -%,%,$(filter -%,$(PACKAGES))),$(DEFAULT_PACKAGES))
   PACKAGES := $(filter-out -%,$(PACKAGES))
   DUMPINFO += \
 	echo "Target-Profile: $(1)"; \
@@ -180,7 +179,7 @@ ifeq ($(DUMP),1)
     CPU_CFLAGS_mips64 = -mips64 -mtune=mips64 -mabi=64
     CPU_CFLAGS_24kc = -mips32r2 -mtune=24kc
     CPU_CFLAGS_74kc = -mips32r2 -mtune=74kc
-    CPU_CFLAGS_octeon = -march=octeon -mabi=64
+    CPU_CFLAGS_octeonplus = -march=octeon+ -mabi=64
   endif
   ifeq ($(ARCH),i386)
     CPU_TYPE ?= pentium
@@ -189,26 +188,6 @@ ifeq ($(DUMP),1)
   endif
   ifneq ($(findstring arm,$(ARCH)),)
     CPU_TYPE ?= xscale
-    CPU_CFLAGS_arm920t = -mcpu=arm920t
-    CPU_CFLAGS_arm926ej-s = -mcpu=arm926ej-s
-    CPU_CFLAGS_arm1136j-s = -mcpu=arm1136j-s
-    CPU_CFLAGS_arm1176jzf-s = -mcpu=arm1176jzf-s
-    CPU_CFLAGS_cortex-a5 = -mcpu=cortex-a5
-    CPU_CFLAGS_cortex-a7 = -mcpu=cortex-a7
-    CPU_CFLAGS_cortex-a8 = -mcpu=cortex-a8
-    CPU_CFLAGS_cortex-a9 = -mcpu=cortex-a9
-    CPU_CFLAGS_cortex-a15 = -mcpu=cortex-a15
-    CPU_CFLAGS_cortex-a53 = -mcpu=cortex-a53
-    CPU_CFLAGS_cortex-a72 = -mcpu=cortex-a72
-    CPU_CFLAGS_fa526 = -mcpu=fa526
-    CPU_CFLAGS_mpcore = -mcpu=mpcore
-    CPU_CFLAGS_xscale = -mcpu=xscale
-    ifeq ($(CONFIG_SOFT_FLOAT),)
-      CPU_CFLAGS_neon = -mfpu=neon
-      CPU_CFLAGS_vfp = -mfpu=vfp
-      CPU_CFLAGS_vfpv3 = -mfpu=vfpv3-d16
-      CPU_CFLAGS_neon-vfpv4 = -mfpu=neon-vfpv4
-    endif
   endif
   ifeq ($(ARCH),powerpc)
     CPU_CFLAGS_603e:=-mcpu=603e
