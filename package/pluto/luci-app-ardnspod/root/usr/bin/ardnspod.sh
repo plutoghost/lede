@@ -116,11 +116,11 @@ arDdnsInfo() {
     domainID=$(echo $domainID | sed 's/.*{"id":"\([0-9]*\)".*/\1/')
     
     # Get Record ID
-    recordID=$(arApiPost "Record.List" "domain_id=${domainID}&sub_domain=${2}")
+    recordID=$(arApiPost "Record.List" "domain_id=${domainID}&sub_domain=${2}&record_type=A")
     recordID=$(echo $recordID | sed 's/.*\[{"id":"\([0-9]*\)".*/\1/')
     
     # Last IP
-    recordIP=$(arApiPost "Record.Info" "domain_id=${domainID}&record_id=${recordID}")
+    recordIP=$(arApiPost "Record.Info" "domain_id=${domainID}&record_id=${recordID}&record_type=A")
     recordIP=$(echo $recordIP | sed 's/.*,"value":"\([0-9\.]*\)".*/\1/')
 
     # Output IP
@@ -158,7 +158,7 @@ arDdnsUpdate() {
     domainID=$(echo $domainID | sed 's/.*{"id":"\([0-9]*\)".*/\1/')
     
     # Get Record ID
-    recordID=$(arApiPost "Record.List" "domain_id=${domainID}&sub_domain=${2}")
+    recordID=$(arApiPost "Record.List" "domain_id=${domainID}&sub_domain=${2}&record_type=A")
     recordID=$(echo $recordID | sed 's/.*\[{"id":"\([0-9]*\)".*/\1/')
     
     # Update IP
