@@ -5,6 +5,7 @@
 #
 
 include $(TOPDIR)/rules.mk
+PROFILE:=$(call qstrip,$(CONFIG_TARGET_PROFILE))
 
 ifeq ($(ARCH),x86_64)
 	PKG_ARCH_KCPTUN:=amd64
@@ -24,6 +25,9 @@ endif
 ifeq ($(BOARD),bcm53xx)
 	PKG_ARCH_KCPTUN:=arm6
 endif
+ifeq ($(PROFILE),DEVICE_phicomm-k3)
+	PKG_ARCH_KCPTUN:=arm5
+endif
 ifeq ($(BOARD),kirkwood)
 	PKG_ARCH_KCPTUN:=arm5
 endif
@@ -32,7 +36,7 @@ ifeq ($(ARCH),aarch64)
 endif
 
 PKG_NAME:=kcptun-client
-PKG_VERSION:=20190515
+PKG_VERSION:=20191112
 PKG_RELEASE:=2
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE:=kcptun-linux-$(PKG_ARCH_KCPTUN)-$(PKG_VERSION).tar.gz
