@@ -9,4 +9,11 @@ function index()
 	
 
 	entry({"admin", "services", "pptp-server"}, cbi("pptp-server/pptp-server"), _("PPTP VPN Server"), 80).dependent=false
+	entry({"admin", "services", "pptp-server","status"},call("act_status")).leaf=true
+end
+function act_status()
+  local e={}
+  e.running=luci.sys.call("pgrep pptpd >/dev/null")==0
+  luci.http.prepare_content("application/json")
+  luci.http.write_json(e)
 end
