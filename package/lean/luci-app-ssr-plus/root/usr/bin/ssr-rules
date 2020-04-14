@@ -30,6 +30,10 @@ Valid options are:
     -p <fp_lan_ips>         lan ip of will be global proxy
     -G <gm_lan_ips>         lan ip of will be game mode proxy
     -D <proxy_ports>        proxy ports
+    -F                      netflix mode
+    -N                      netflix server IP
+    -M                      netflix proxy mode
+    -I <ip_list_file>       a file content is bypassed netflix ip list
     -e <extra_options>      extra options for iptables
     -o                      apply the rules to the OUTPUT chain
     -O                      apply the global rules to the OUTPUT chain
@@ -71,47 +75,50 @@ flush_r() {
 	ipset -X oversea 2>/dev/null
 	ipset -X whitelist 2>/dev/null
 	ipset -X blacklist 2>/dev/null
+	ipset -X netflix 2>/dev/null
 	[ -n "$FWI" ] && echo '#!/bin/sh' >$FWI
 	return 0
 }
 
 ipset_r() {
 	ipset -N gmlan hash:net 2>/dev/null
-	for ip in $LAN_GM_IP; do ipset -! add gmlan $ip ; done
 	
-	if [ "$RUNMODE" = "router" ] ;then
-	ipset -! -R <<-EOF || return 1
-		create ss_spec_wan_ac hash:net
-		$(gen_iplist | sed -e "s/^/add ss_spec_wan_ac /")
-EOF
-	ipset -N gfwlist hash:net 2>/dev/null
-	$IPT -N SS_SPEC_WAN_AC 
-	$IPT -I SS_SPEC_WAN_AC -d $server -j RETURN
-	$IPT -A SS_SPEC_WAN_AC -m set --match-set ss_spec_wan_ac dst -j RETURN
-	$IPT -A SS_SPEC_WAN_AC -j SS_SPEC_WAN_FW
 	
-	elif [ "$RUNMODE" = "gfw" ] ;then
-	ipset -N gfwlist hash:net 2>/dev/null
-	$IPT -N SS_SPEC_WAN_AC
-	$IPT -I SS_SPEC_WAN_AC -d $server -j RETURN
-	$IPT -A SS_SPEC_WAN_AC -m set --match-set china dst -j RETURN
-	$IPT -A SS_SPEC_WAN_AC -m set --match-set gfwlist dst -j SS_SPEC_WAN_FW	
-	$IPT -A SS_SPEC_WAN_AC -m set --match-set gmlan src -m set ! --match-set china dst -j SS_SPEC_WAN_FW	
-	
-	elif [ "$RUNMODE" = "oversea" ] ;then
-	ipset -N oversea hash:net 2>/dev/null
-	$IPT -N SS_SPEC_WAN_AC
-	ipset -N gmlan hash:net 2>/dev/null
-	for ip in $LAN_GM_IP; do ipset -! add gmlan $ip ; done
-	$IPT -A SS_SPEC_WAN_AC -m set --match-set china dst -j SS_SPEC_WAN_FW
-	$IPT -I SS_SPEC_WAN_AC -d $server -j RETURN
-	
-	elif [ "$RUNMODE" = "all" ] ;then
-	$IPT -N SS_SPEC_WAN_AC
-	$IPT -A SS_SPEC_WAN_AC -j SS_SPEC_WAN_FW
-	$IPT -I SS_SPEC_WAN_AC -d $server -j RETURN
-	
-	fi
+	for ip in $LAN_GM_IP; do ipset -! add gmlan $ip; done
+	case "$RUNMODE" in
+	router)
+		ipset -! -R <<-EOF || return 1
+			create ss_spec_wan_ac hash:net
+			$(gen_iplist | sed -e "s/^/add ss_spec_wan_ac /")
+		EOF
+		ipset -N gfwlist hash:net 2>/dev/null
+		$IPT -N SS_SPEC_WAN_AC
+		$IPT -I SS_SPEC_WAN_AC -p tcp ! --dport 53 -d $server -j RETURN
+		$IPT -A SS_SPEC_WAN_AC -m set --match-set ss_spec_wan_ac dst -j RETURN
+		$IPT -A SS_SPEC_WAN_AC -j SS_SPEC_WAN_FW
+		;;
+	gfw)
+		ipset -N gfwlist hash:net 2>/dev/null
+		$IPT -N SS_SPEC_WAN_AC
+		$IPT -A SS_SPEC_WAN_AC -m set --match-set gfwlist dst -j SS_SPEC_WAN_FW
+		$IPT -A SS_SPEC_WAN_AC -m set --match-set gmlan src -m set ! --match-set china dst -j SS_SPEC_WAN_FW
+		$IPT -A SS_SPEC_WAN_AC -m set --match-set china dst -j RETURN
+		$IPT -I SS_SPEC_WAN_AC -p tcp ! --dport 53 -d $server -j RETURN
+		;;
+	oversea)
+		ipset -N oversea hash:net 2>/dev/null
+		$IPT -N SS_SPEC_WAN_AC
+		ipset -N gmlan hash:net 2>/dev/null
+		for ip in $LAN_GM_IP; do ipset -! add gmlan $ip; done
+		$IPT -A SS_SPEC_WAN_AC -m set --match-set china dst -j SS_SPEC_WAN_FW
+		$IPT -I SS_SPEC_WAN_AC -p tcp ! --dport 53 -d $server -j RETURN
+		;;
+	all)
+		$IPT -N SS_SPEC_WAN_AC
+		$IPT -A SS_SPEC_WAN_AC -j SS_SPEC_WAN_FW
+		$IPT -I SS_SPEC_WAN_AC -p tcp ! --dport 53 -d $server -j RETURN
+		;;
+	esac
 	ipset -N fplan hash:net 2>/dev/null
 	for ip in $LAN_FP_IP; do ipset -! add fplan $ip; done
 	$IPT -I SS_SPEC_WAN_AC -m set --match-set fplan src -j SS_SPEC_WAN_FW
@@ -124,6 +131,21 @@ EOF
 	$IPT -I SS_SPEC_WAN_AC -m set --match-set whitelist dst -j RETURN
 	for ip in $WAN_BP_IP; do ipset -! add whitelist $ip; done
 	for ip in $WAN_FW_IP; do ipset -! add blacklist $ip; done
+	if [ "$NETFLIX" != "0" ]; then
+		ipset -N netflix hash:net 2>/dev/null
+		for ip in $(cat ${NETFLIX_LIST:=/dev/null} 2>/dev/null); do ipset -! add netflix $ip; done
+	fi
+	case "$NETFLIX" in
+	1)
+		$IPT -I SS_SPEC_WAN_AC -p tcp -m set --match-set netflix dst -j REDIRECT --to-ports 4321
+		if [ "$NETFLIX_PROXY" == "1" ]; then
+			$IPT -I SS_SPEC_WAN_AC -p tcp -d $NETFLIX_IP -j REDIRECT --to-ports $local_port
+		else
+			ipset -! add whitelist $NETFLIX_IP
+		fi
+		;;
+	2) $IPT -I SS_SPEC_WAN_AC -p tcp -m set --match-set netflix dst -j REDIRECT --to-ports $local_port ;;
+	esac
 	return $?
 }
 
@@ -189,7 +211,8 @@ tp_rule() {
 	ip route add local 0.0.0.0/0 dev lo table 100
 	local ipt="iptables -t mangle"
 	$ipt -N SS_SPEC_TPROXY
-	$ipt -A SS_SPEC_TPROXY -p udp --dport 443 -j DROP
+	$ipt -A SS_SPEC_TPROXY -p udp --dport 443 -j RETURN
+	$ipt -A SS_SPEC_TPROXY -p udp --dport 80 -j RETURN
 	$ipt -A SS_SPEC_TPROXY -p udp --dport 53 -j RETURN
 	$ipt -A SS_SPEC_TPROXY -p udp -d 0.0.0.0/8 -j RETURN
 	$ipt -A SS_SPEC_TPROXY -p udp -d 10.0.0.0/8 -j RETURN
@@ -199,27 +222,30 @@ tp_rule() {
 	$ipt -A SS_SPEC_TPROXY -p udp -d 192.168.0.0/16 -j RETURN
 	$ipt -A SS_SPEC_TPROXY -p udp -d 224.0.0.0/4 -j RETURN
 	$ipt -A SS_SPEC_TPROXY -p udp -d 240.0.0.0/4 -j RETURN
-	$ipt -A SS_SPEC_TPROXY -p udp -d $SERVER -j RETURN
+	$ipt -A SS_SPEC_TPROXY -p udp ! --dport 53 -d $server -j RETURN
 	$ipt -A SS_SPEC_TPROXY -p udp -m set --match-set bplan src -j RETURN
 	$ipt -A SS_SPEC_TPROXY -p udp $PROXY_PORTS -m set --match-set fplan src \
 	-j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
-	if [ "$RUNMODE" == "router" ]; then
+	case "$RUNMODE" in
+	router)
 		$ipt -A SS_SPEC_TPROXY -p udp -m set --match-set gmlan src -m set ! --match-set china dst \
 		-j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
 		$ipt -A SS_SPEC_TPROXY -p udp $PROXY_PORTS -m set ! --match-set ss_spec_wan_ac dst \
 		-j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
-	elif [ "$RUNMODE" == "gfw" ]; then
+		;;
+	gfw)
 		$ipt -A SS_SPEC_TPROXY -p udp -m set --match-set china dst -j RETURN
 		$ipt -A SS_SPEC_TPROXY -p udp -m set --match-set gmlan src -m set ! --match-set china dst \
 		-j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
 		$ipt -A SS_SPEC_TPROXY -p udp -m set $PROXY_PORTS --match-set gfwlist dst \
 		-j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
-	elif [ "$RUNMODE" == "oversea" ]; then
+		;;
+	oversea)
 		$ipt -A SS_SPEC_TPROXY -p udp $PROXY_PORTS -m set --match-set china dst \
 		-j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
-	elif [ "$RUNMODE" == "all" ]; then
-		$ipt -A SS_SPEC_TPROXY -p udp $PROXY_PORTS -j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
-	fi
+		;;
+	all) $ipt -A SS_SPEC_TPROXY -p udp $PROXY_PORTS -j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01 ;;
+	esac
 	$ipt -I PREROUTING 1 ${IFNAME:+-i $IFNAME} -p udp $EXT_ARGS $MATCH_SET \
 	-m comment --comment "$TAG" -j SS_SPEC_TPROXY
 	return $?
@@ -296,7 +322,7 @@ gen_include() {
 	return 0
 }
 
-while getopts ":s:l:S:L:i:e:a:B:b:w:p:G:D:oOuUfgrczh" arg; do
+while getopts ":s:l:S:L:i:e:a:B:b:w:p:G:D:F:N:M:I:oOuUfgrczh" arg; do
 	case "$arg" in
 	s)
 		server=$OPTARG
@@ -336,6 +362,18 @@ while getopts ":s:l:S:L:i:e:a:B:b:w:p:G:D:oOuUfgrczh" arg; do
 		;;
 	D)
 		PROXY_PORTS=$OPTARG
+		;;
+	F)
+		NETFLIX=$OPTARG
+		;;
+	N)
+		NETFLIX_IP=$OPTARG
+		;;
+	M)
+		NETFLIX_PROXY=$OPTARG
+		;;
+	I)
+		NETFLIX_LIST=$OPTARG
 		;;
 	o)
 		OUTPUT=1
