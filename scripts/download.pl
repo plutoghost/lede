@@ -195,10 +195,7 @@ foreach my $mirror (@ARGV) {
 		}
 	} elsif ($mirror =~ /^\@APACHE\/(.+)$/) {
 		push @mirrors, "https://mirrors.ustc.edu.cn/apache/$1";
-<<<<<<< HEAD
 		push @mirrors, "https://mirrors.tuna.tsinghua.edu.cn/apache/$1";
-=======
->>>>>>> 4d14e9ceabf2a9a418c41706f3c0c848af8f035f
 		push @mirrors, "https://mirror.netcologne.de/apache.org/$1";
 		push @mirrors, "https://mirror.aarnet.edu.au/pub/apache/$1";
 		push @mirrors, "https://mirror.csclub.uwaterloo.ca/apache/$1";
