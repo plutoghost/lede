@@ -21,6 +21,11 @@ wifi.rmempty = false
 wifi.description = translate("Enable Bridge Acceleration (may be functional conflict with bridge-mode VPN Server)")
 wifi:depends("enabled", 1)
 
+ipv6 = s:option(Flag, "ipv6", translate("IPv6 Acceleration"))
+ipv6.default = 0
+ipv6.rmempty = false
+ipv6.description = translate("Enable IPv6 Acceleration")
+ipv6:depends("enabled", 1)
 
 bbr = s:option(Flag, "bbr", translate("Enable BBR"))
 bbr.default = 0

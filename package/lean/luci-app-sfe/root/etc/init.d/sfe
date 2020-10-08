@@ -148,6 +148,7 @@ revert_dns() {
 start_service() {
   enable=$(uci get sfe.config.enabled 2>/dev/null)
   wifi=$(uci get sfe.config.wifi)
+  ipv6=$(uci get sfe.config.ipv6)
   dns=$(uci get sfe.config.dns 2>/dev/null)
   bbr=$(uci get sfe.config.bbr 2>/dev/null)
   
@@ -157,6 +158,12 @@ start_service() {
        echo 1 > /sys/fast_classifier/skip_to_bridge_ingress
       else
        echo 0 > /sys/fast_classifier/skip_to_bridge_ingress
+      fi
+      if [ $ipv6 -eq 1 ];  then
+        sfe_ipv6=$(cat /sys/sfe_ipv6/debug_dev)
+        [ ! -f /dev/sfe_ipv6 ] && mknod /dev/sfe_ipv6 c $sfe_ipv6 0
+      else
+        rm -f /dev/sfe_ipv6
       fi
    else
       rmmod fast_classifier >/dev/null 2>&1 
