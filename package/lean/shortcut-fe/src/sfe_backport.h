@@ -72,10 +72,12 @@ static unsigned int FN_NAME(unsigned int HOOKNUM, \
 
 #define sfe_cm_ipv4_post_routing_hook(HOOKNUM, OPS, SKB, UNUSED, OUT, OKFN) \
 	sfe_define_post_routing_hook(__sfe_cm_ipv4_post_routing_hook, HOOKNUM, OPS, SKB, UNUSED, OUT, OKFN)
-
+#define sfe_cm_ipv6_post_routing_hook(HOOKNUM, OPS, SKB, UNUSED, OUT, OKFN) \
+	sfe_define_post_routing_hook(__sfe_cm_ipv6_post_routing_hook, HOOKNUM, OPS, SKB, UNUSED, OUT, OKFN)
 #define fast_classifier_ipv4_post_routing_hook(HOOKNUM, OPS, SKB, UNUSED, OUT, OKFN) \
 	sfe_define_post_routing_hook(__fast_classifier_ipv4_post_routing_hook, HOOKNUM, OPS, SKB, UNUSED, OUT, OKFN)
-
+#define fast_classifier_ipv6_post_routing_hook(HOOKNUM, OPS, SKB, UNUSED, OUT, OKFN) \
+	sfe_define_post_routing_hook(__fast_classifier_ipv6_post_routing_hook, HOOKNUM, OPS, SKB, UNUSED, OUT, OKFN)
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 4, 0))
 #define SFE_IPV4_NF_POST_ROUTING_HOOK(fn) \
@@ -96,7 +98,24 @@ static unsigned int FN_NAME(unsigned int HOOKNUM, \
 	}
 #endif
 
-
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 4, 0))
+#define SFE_IPV6_NF_POST_ROUTING_HOOK(fn) \
+	{						\
+		.hook = fn,				\
+		.pf = NFPROTO_IPV6,			\
+		.hooknum = NF_INET_POST_ROUTING,	\
+		.priority = NF_IP_PRI_NAT_SRC + 1,	\
+	}
+#else
+#define SFE_IPV6_NF_POST_ROUTING_HOOK(fn) \
+	{						\
+		.hook = fn,				\
+		.owner = THIS_MODULE,			\
+		.pf = NFPROTO_IPV6,			\
+		.hooknum = NF_INET_POST_ROUTING,	\
+		.priority = NF_IP6_PRI_NAT_SRC + 1,	\
+	}
+#endif
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 3, 0))
 #define SFE_NF_CT_DEFAULT_ZONE (&nf_ct_zone_dflt)
