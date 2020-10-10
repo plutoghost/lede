@@ -1,9 +1,9 @@
 [submodule "package/pluto/luci-app-kcptun"]
 	path = package/pluto/luci-app-kcptun
-	url = https://github.com/plutoghost/luci-app-kcptun/
-[submodule "/home/Pluto/lede/package/pluto/luci-app-k3screenctrl"]
-	path = /home/Pluto/lede/package/pluto/luci-app-k3screenctrl
-	url = https://github.com/plutoghost/luci-app-k3screenctrl
-[submodule "/home/Pluto/lede/package/pluto/k3screenctrl"]
-	path = /home/Pluto/lede/package/pluto/k3screenctrl
-	url = https://github.com/plutoghost/k3screenctrl_build
+	url = git@github.com:plutoghost/luci-app-kcptun.git
+[submodule "package/pluto/luci-app-k3screenctrl"]
+	path = package/pluto/luci-app-k3screenctrl
+	url = git@github.com:plutoghost/luci-app-k3screenctrl.git
+[submodule "package/pluto/k3screenctrl"]
+	path = package/pluto/k3screenctrl
+	url = git@github.com:plutoghost/k3screenctrl_build.git
