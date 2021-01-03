@@ -353,7 +353,6 @@ static bool fast_classifier_find_dev_and_mac_addr(struct sk_buff *skb, sfe_ip_ad
 #else
 		rt6 = rt6_lookup(&init_net, (struct in6_addr *)addr->ip6, 0, 0, 0);
 #endif /*KERNEL_VERSION(4, 17, 0)*/
-#endif
 		if (!rt6) {
 			goto ret_fail;
 		}
