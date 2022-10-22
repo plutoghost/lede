@@ -1,15 +1,13 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
 # Copyright (C) 2006-2013 OpenWrt.org
-#
-# This is free software, licensed under the GNU General Public License v2.
-# See /LICENSE for more information.
-#
 
 menuconfig DEVEL
 	bool "Advanced configuration options (for developers)"
 	default n
 
 	config BROKEN
-		bool "Show broken platforms / packages" if DEVEL
+		bool "Show broken platforms / packages / devices" if DEVEL
 		default n
 
 	config BINARY_FOLDER
@@ -18,6 +16,20 @@ menuconfig DEVEL
 		help
 		  Store built firmware images and filesystem images in this directory.
 		  If not set, uses './bin/$(BOARD)'
+
+	config DOWNLOAD_TOOL_CUSTOM
+		string "Use custom download tool" if DEVEL
+		default ""
+		help
+		  Use and force custom download tool instead of relying on autoselection
+		  between curl if available and wget as a fallback.
+
+		  download.pl supports 3 tools officially aria2c, curl and wget.
+		  If one of the tool is used in this config, download.pl will use the
+		  default args to make use of them.
+
+		  If the provided string is different than aria2c, curl or wget, the command
+		  is used as is and the download url will be appended at the end of such command.
 
 	config DOWNLOAD_FOLDER
 		string "Download folder" if DEVEL
@@ -69,6 +81,13 @@ menuconfig DEVEL
 		help
 		  Compiler cache; see https://ccache.samba.org/
 
+	config CCACHE_DIR
+		string "Set ccache directory" if CCACHE
+		default ""
+		help
+		  Store ccache in this directory.
+		  If not set, uses './.ccache'
+
 	config EXTERNAL_KERNEL_TREE
 		string "Use external kernel tree" if DEVEL
 		default ""
@@ -99,6 +118,11 @@ menuconfig DEVEL
 		  after it is cloned, and before making it a tar-ball.
 		  It can be a git hash or a branch name.
 		  If unused, the clone's repository HEAD will be checked-out.
+
+	config KERNEL_GIT_MIRROR_HASH
+		string "Enter hash of Git kernel tree source checkout tarball" if DEVEL
+		depends on (KERNEL_GIT_CLONE_URI != "")
+		default ""
 
 	config BUILD_LOG
 		bool "Enable log files during build process" if DEVEL
