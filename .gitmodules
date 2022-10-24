@@ -7,3 +7,12 @@
 [submodule "package/pluto/k3screenctrl"]
 	path = package/pluto/k3screenctrl
 	url = git@github.com:plutoghost/k3screenctrl_build.git
+[submodule "package/pluto/v2ray-geodata"]
+	path = package/pluto/v2ray-geodata
+	url = git@github.com:sbwml/v2ray-geodata.git
+[submodule "package/pluto/luci-app-mosdns"]
+	path = package/pluto/luci-app-mosdns
+	url = git@github.com:sbwml/luci-app-mosdns
+[submodule "package/pluto/luci-app-adguardhome"]
+	path = package/pluto/luci-app-adguardhome
+	url = git@github.com:kongfl888/luci-app-adguardhome.git
